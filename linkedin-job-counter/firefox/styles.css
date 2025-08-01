@@ -1,0 +1,232 @@
+/**
+ * Styles for LinkedIn Job Insights Extension (Firefox)
+ * Designed to integrate seamlessly with LinkedIn's UI
+ */
+
+/* Main container for job insights */
+.linkedin-job-insights-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Individual insight items */
+.linkedin-job-insights-applicants,
+.linkedin-job-insights-views {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  line-height: 1.33333;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 400;
+}
+
+/* Text styling to match LinkedIn */
+.linkedin-job-insights-container .tvm__text {
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: inherit;
+}
+
+.linkedin-job-insights-container .job-card-container__metadata-item {
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+/* Icons (if we add them later) */
+.linkedin-job-insights-icon {
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  opacity: 0.6;
+}
+
+/* Separator dot between items */
+.linkedin-job-insights-separator {
+  color: rgba(0, 0, 0, 0.4);
+  margin: 0 4px;
+  font-size: 8px;
+}
+
+.linkedin-job-insights-separator::before {
+  content: "•";
+}
+
+/* Integration with job card layouts */
+
+/* Job search results list */
+.jobs-search-results-list .linkedin-job-insights-container {
+  margin: 4px 0 0 0;
+}
+
+/* Job card in search results */
+.job-card-container .linkedin-job-insights-container {
+  margin: 2px 0;
+}
+
+/* Job details top card */
+.jobs-unified-top-card .linkedin-job-insights-container {
+  margin: 8px 0 4px 0;
+  font-size: 14px;
+}
+
+.jobs-unified-top-card .linkedin-job-insights-applicants,
+.jobs-unified-top-card .linkedin-job-insights-views {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Job card metadata integration */
+.job-card-container__metadata .linkedin-job-insights-container {
+  display: inline-flex;
+  margin-left: 8px;
+}
+
+.job-card-container__metadata .linkedin-job-insights-container::before {
+  content: "•";
+  color: rgba(0, 0, 0, 0.4);
+  margin-right: 8px;
+  font-size: 8px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .linkedin-job-insights-container {
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-start;
+  }
+
+  .linkedin-job-insights-separator {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .linkedin-job-insights-container {
+    font-size: 11px;
+  }
+
+  .jobs-unified-top-card .linkedin-job-insights-container {
+    font-size: 12px;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .linkedin-job-insights-applicants,
+  .linkedin-job-insights-views {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .linkedin-job-insights-separator {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .jobs-unified-top-card .linkedin-job-insights-applicants,
+  .jobs-unified-top-card .linkedin-job-insights-views {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .linkedin-job-insights-icon {
+    filter: invert(1);
+    opacity: 0.7;
+  }
+}
+
+/* LinkedIn's dark mode class support */
+.theme--dark .linkedin-job-insights-applicants,
+.theme--dark .linkedin-job-insights-views {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.theme--dark .linkedin-job-insights-separator {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.theme--dark .jobs-unified-top-card .linkedin-job-insights-applicants,
+.theme--dark .jobs-unified-top-card .linkedin-job-insights-views {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .linkedin-job-insights-applicants,
+  .linkedin-job-insights-views {
+    color: #000;
+    font-weight: 500;
+  }
+
+  .theme--dark .linkedin-job-insights-applicants,
+  .theme--dark .linkedin-job-insights-views {
+    color: #fff;
+    font-weight: 500;
+  }
+}
+
+/* Animations for smooth updates */
+.linkedin-job-insights-container {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.linkedin-job-insights-container.updating {
+  opacity: 0.6;
+}
+
+/* Hover effects for interactive elements */
+.linkedin-job-insights-container:hover {
+  opacity: 0.8;
+}
+
+/* Print styles */
+@media print {
+  .linkedin-job-insights-container {
+    color: #000 !important;
+    font-size: 10px !important;
+  }
+}
+
+/* Focus indicators for accessibility */
+.linkedin-job-insights-container:focus-within {
+  outline: 2px solid #0a66c2;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* RTL language support */
+[dir="rtl"] .linkedin-job-insights-container {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .linkedin-job-insights-icon {
+  margin-right: 0;
+  margin-left: 4px;
+}
+
+[dir="rtl"] .job-card-container__metadata .linkedin-job-insights-container::before {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .linkedin-job-insights-container {
+    transition: none;
+  }
+}
+
+/* Custom scrollbar for overflow content */
+.linkedin-job-insights-container::-webkit-scrollbar {
+  display: none;
+}
+
+.linkedin-job-insights-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

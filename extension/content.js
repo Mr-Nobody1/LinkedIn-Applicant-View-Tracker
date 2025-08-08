@@ -1,6 +1,7 @@
 (() => {
   'use strict';
   if (window.__liJobInsightsInjected) return; window.__liJobInsightsInjected = true;
+  const log = (...a)=>console.log('[LI-JI][content]', ...a);
 
   const fmt = (n) => (n === null || n === undefined) ? 'N/A' : Number(n).toLocaleString();
   const UI = {
@@ -36,14 +37,19 @@
   const jobIdFromUrl = (url) => { const ps=[/jobs\/view\/(\d+)/,/jobPostings\/(\d+)/,/currentJobId=(\d+)/,/jobId[=:](\d+)/]; for(const r of ps){const m=(url||'').match(r); if(m) return m[1];} return null; };
 
   window.addEventListener('message', (e) => {
+    log('window message', e?.data?.type, e?.data?.payload?.jobId);
     if (e.data?.type === 'LI_JI_DATA') {
       const { jobId, applies, views } = e.data.payload || {}; const current = jobIdFromUrl(location.href);
       if (!current || current !== jobId) return;
+      log('Forwarding to SW CACHE_JOB_DATA', { jobId, applies, views });
       chrome.runtime?.sendMessage?.({ type: 'CACHE_JOB_DATA', jobId, applies, views });
       UI.toast({ applies, views }); UI.inline({ applies, views });
     }
   });
 
   // Ask background to inject MAIN-world interceptor
-  chrome.runtime?.sendMessage?.({ type: 'INJECT_INTERCEPTOR' });
+  log('Requesting interceptor injection');
+  chrome.runtime?.sendMessage?.({ type: 'INJECT_INTERCEPTOR' }, (r)=>{
+    log('INJECT_INTERCEPTOR ack', r);
+  });
 })();

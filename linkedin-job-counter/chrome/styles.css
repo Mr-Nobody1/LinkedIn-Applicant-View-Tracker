@@ -3,6 +3,19 @@
  * Designed to integrate seamlessly with LinkedIn's UI
  */
 
+/* Toast */
+.li-ji-toast { position: fixed; top: 20px; right: 20px; background: #0a66c2; color: #fff; padding: 14px 16px; border-radius: 10px; box-shadow: 0 12px 24px rgba(2,32,71,.2); z-index: 10000; transform: translateY(-8px); opacity: 0; transition: all .25s ease; max-width: 320px; border: 1px solid #ffffff26; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+.li-ji-toast.show { transform: translateY(0); opacity: 1; }
+.li-ji-toast__title { font-weight: 700; margin-bottom: 6px; font-size: 14px; letter-spacing: .2px; }
+.li-ji-toast__row { display:flex; align-items:center; justify-content:space-between; gap: 14px; font-size: 13px; opacity: .95; }
+.li-ji-toast__row + .li-ji-toast__row { margin-top: 4px; }
+
+/* Inline panel */
+.li-ji-inline { display: inline-flex; align-items: center; gap: 10px; background: #f3f6f8; border: 1px solid #e5e7eb; padding: 8px 10px; border-radius: 8px; margin-top: 8px; }
+.li-ji-chip { display:flex; align-items:center; gap:8px; color:#334155; font-size: 13px; }
+.li-ji-chip strong { color:#0a66c2; font-weight: 700; }
+.li-ji-sep { width:1px; height:14px; background:#e5e7eb; }
+
 /* Main container for job insights */
 .linkedin-job-insights-container {
   display: inline-flex;

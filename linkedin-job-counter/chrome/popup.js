@@ -1,50 +1,50 @@
-// popup.js - Show applicant/view numbers for current job
+// popup.js - Show applicant/view numbers for current job with clean UI
 
-function showError(msg) {
-  document.getElementById('error').textContent = msg;
-  document.getElementById('error').style.display = 'block';
-}
+const $ = (id) => document.getElementById(id);
 
 function setStats({ applies, views, jobId }) {
-  document.getElementById('applies').textContent = applies !== undefined ? applies : 'N/A';
-  document.getElementById('views').textContent = views !== undefined ? views : 'N/A';
-  document.getElementById('jobId').textContent = jobId || 'N/A';
+  $('applies').textContent = applies ?? 'N/A';
+  $('views').textContent = views ?? 'N/A';
+  $('jobId').textContent = jobId || 'N/A';
+  $('stats').style.display = 'block';
+  $('empty').style.display = 'none';
 }
 
-
-// Extract job ID from any LinkedIn job URL format
 function extractJobIdFromUrl(url) {
-  // Try /jobs/view/12345 or /jobs/view/12345/
-  let match = url.match(/jobs\/view\/(\d+)/);
-  if (match) return match[1];
-  // Try /jobPostings/12345
-  match = url.match(/jobPostings\/(\d+)/);
-  if (match) return match[1];
-  // Try currentJobId=12345
-  match = url.match(/currentJobId=(\d+)/);
-  if (match) return match[1];
-  // Try jobId=12345
-  match = url.match(/jobId[=:](\d+)/);
-  if (match) return match[1];
+  const patterns = [
+    /jobs\/view\/(\d+)/,
+    /jobPostings\/(\d+)/,
+    /currentJobId=(\d+)/,
+    /jobId[=:](\d+)/
+  ];
+  for (const re of patterns) { const m = url.match(re); if (m) return m[1]; }
   return null;
 }
 
-chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-  const tab = tabs[0];
-  if (!tab || !tab.url) {
-    showError('No active LinkedIn job tab found.');
-    return;
-  }
-  const jobId = extractJobIdFromUrl(tab.url);
-  if (!jobId) {
-    showError('Not a LinkedIn job page.');
-    return;
-  }
-  chrome.runtime.sendMessage({ type: 'GET_JOB_DATA', jobId }, function(response) {
-    if (response && response.data) {
+chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  const tab = tabs?.[0];
+  const url = tab?.url || '';
+  const jobId = extractJobIdFromUrl(url);
+  if (!jobId) return; // keep empty state
+
+  chrome.runtime.sendMessage({ type: 'GET_JOB_DATA', jobId }, (response) => {
+    if (response?.data) {
       setStats({ ...response.data, jobId });
-    } else {
-      showError('No applicant/view data found for this job. Try refreshing the job page.');
     }
   });
+  // Wire refresh button
+  const btn = $('refresh');
+  if (btn) {
+    btn.onclick = () => {
+      // Trigger MAIN-world injection and a gentle re-check
+      chrome.runtime.sendMessage({ type: 'INJECT_INTERCEPTOR', tabId: tab?.id }, () => {
+        // After a short delay, ask for data again
+        setTimeout(() => {
+          chrome.runtime.sendMessage({ type: 'GET_JOB_DATA', jobId }, (res2) => {
+            if (res2?.data) setStats({ ...res2.data, jobId });
+          });
+        }, 1000);
+      });
+    };
+  }
 });

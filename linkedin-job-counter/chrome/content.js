@@ -1,230 +1,121 @@
-/**
- * Content Script for LinkedIn Job Insights Extension (Chrome)
- * Manages UI injection and user interactions
- */
+// Content Script for LinkedIn Job Insights Extension (Chrome)
+// Fast, reliable: Intercepts fetch/XHR in page context, extracts applicant count, and shows notification
 
 (function() {
   'use strict';
 
   // Prevent multiple injections
-  if (window.linkedInJobInsightsInjected) {
-    return;
-  }
+  if (window.linkedInJobInsightsInjected) return;
   window.linkedInJobInsightsInjected = true;
 
-  class LinkedInJobInsightsContent {
-    constructor() {
-      this.uiInjector = null;
-      this.isInitialized = false;
-      this.currentUrl = window.location.href;
-      this.urlCheckInterval = null;
-      
-      this.init();
-    }
-
-    async init() {
-      try {
-        // Wait for page to be ready
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', () => this.initializeExtension());
-        } else {
-          this.initializeExtension();
+  // Inject a script into the page to intercept fetch/XHR
+  function injectVoyagerInterceptor() {
+    const script = document.createElement('script');
+    script.textContent = `
+      (function() {
+        function sendData(jobId, data) {
+          window.postMessage({ type: 'LINKEDIN_JOB_INSIGHTS_DATA', jobId, data }, '*');
         }
 
-        // Monitor URL changes for SPA navigation
-        this.setupUrlMonitoring();
-
-        utils.log('Content script initialized');
-      } catch (error) {
-        utils.error('Error initializing content script:', error);
-      }
-    }
-
-    async initializeExtension() {
-      if (this.isInitialized) return;
-
-      try {
-        // Wait a bit for LinkedIn to load
-        await utils.sleep(1000);
-
-        // Initialize UI injector
-        this.uiInjector = new LinkedInUIInjector();
-        this.uiInjector.init();
-
-        // Request job data for current page
-        await this.requestJobDataForCurrentPage();
-
-        this.isInitialized = true;
-        utils.log('Extension initialized successfully');
-
-      } catch (error) {
-        utils.error('Error initializing extension:', error);
-      }
-    }
-
-    setupUrlMonitoring() {
-      // Check for URL changes every second (for SPA navigation)
-      this.urlCheckInterval = setInterval(() => {
-        if (window.location.href !== this.currentUrl) {
-          this.currentUrl = window.location.href;
-          this.handleUrlChange();
-        }
-      }, 1000);
-
-      // Also listen for history changes
-      const originalPushState = history.pushState;
-      const originalReplaceState = history.replaceState;
-
-      history.pushState = function() {
-        originalPushState.apply(history, arguments);
-        setTimeout(() => this.handleUrlChange(), 100);
-      }.bind(this);
-
-      history.replaceState = function() {
-        originalReplaceState.apply(history, arguments);
-        setTimeout(() => this.handleUrlChange(), 100);
-      }.bind(this);
-
-      window.addEventListener('popstate', () => {
-        setTimeout(() => this.handleUrlChange(), 100);
-      });
-    }
-
-    async handleUrlChange() {
-      utils.log('URL changed to:', this.currentUrl);
-
-      // Re-initialize if on a new job page
-      if (this.isLinkedInJobPage()) {
-        await utils.sleep(2000); // Wait for LinkedIn to load new content
-        
-        if (this.uiInjector) {
-          this.uiInjector.injectDataForAllJobs();
+        function extractJobId(url) {
+          const m = url.match(/jobPostings\\/(\\d+)/);
+          return m ? m[1] : null;
         }
 
-        await this.requestJobDataForCurrentPage();
-      }
-    }
-
-    isLinkedInJobPage() {
-      return this.currentUrl.includes('/jobs/') || 
-             this.currentUrl.includes('/search/results/');
-    }
-
-    async requestJobDataForCurrentPage() {
-      try {
-        // Extract job ID from current URL
-        const jobId = utils.extractJobId(this.currentUrl);
-        
-        if (jobId) {
-          // Request data from background script
-          const response = await chrome.runtime.sendMessage({
-            type: 'GET_JOB_DATA',
-            jobId: jobId
-          });
-
-          if (response && response.data) {
-            this.handleJobData(response.jobId, response.data);
+        function findApplies(obj, depth = 0) {
+          if (!obj || typeof obj !== 'object' || depth > 10) return null;
+          const keys = ['applies', 'applicationCount', 'numApplicants', 'applicantCount', 'totalApplications'];
+          for (const k of keys) if (typeof obj[k] === 'number') return obj[k];
+          for (const k in obj) {
+            if (obj.hasOwnProperty(k)) {
+              const v = findApplies(obj[k], depth + 1);
+              if (v !== null) return v;
+            }
           }
+          return null;
         }
 
-        // Also request refresh to trigger new API calls
-        chrome.runtime.sendMessage({
-          type: 'REFRESH_JOB_DATA'
-        });
+        // Patch fetch
+        const origFetch = window.fetch;
+        window.fetch = function(...args) {
+          const url = args[0];
+          if (typeof url === 'string' && url.includes('/voyager/api/jobs/jobPostings')) {
+            return origFetch.apply(this, args).then(resp => {
+              try {
+                const clone = resp.clone();
+                clone.json().then(data => {
+                  const jobId = extractJobId(url);
+                  const applies = findApplies(data);
+                  if (jobId && applies !== null) sendData(jobId, { applies });
+                }).catch(()=>{});
+              } catch(e){}
+              return resp;
+            });
+          }
+          return origFetch.apply(this, args);
+        };
 
-      } catch (error) {
-        utils.error('Error requesting job data:', error);
-      }
-    }
-
-    handleJobData(jobId, data) {
-      if (!this.uiInjector) return;
-
-      utils.log('Received job data in content script:', jobId, data);
-      this.uiInjector.handleJobData(jobId, data);
-    }
-
-    // Handle messages from background script
-    handleMessage(message, sender, sendResponse) {
-      try {
-        if (message.type === 'JOB_DATA_UPDATE') {
-          this.handleJobData(message.jobId, message.data);
-        }
-      } catch (error) {
-        utils.error('Error handling message:', error);
-      }
-    }
-
-    cleanup() {
-      if (this.urlCheckInterval) {
-        clearInterval(this.urlCheckInterval);
-        this.urlCheckInterval = null;
-      }
-
-      if (this.uiInjector) {
-        this.uiInjector.cleanup();
-        this.uiInjector = null;
-      }
-
-      this.isInitialized = false;
-    }
+        // Patch XHR
+        const origOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+          this._li_url = url;
+          return origOpen.call(this, method, url, ...rest);
+        };
+        const origSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.send = function(...args) {
+          this.addEventListener('load', function() {
+            try {
+              if (this._li_url && this._li_url.includes('/voyager/api/jobs/jobPostings')) {
+                const jobId = extractJobId(this._li_url);
+                const data = JSON.parse(this.responseText);
+                const applies = findApplies(data);
+                if (jobId && applies !== null) sendData(jobId, { applies });
+              }
+            } catch(e){}
+          });
+          return origSend.apply(this, args);
+        };
+      })();
+    `;
+    (document.head || document.documentElement).appendChild(script);
+    script.remove();
   }
 
-  // Initialize the content script
-  const contentScript = new LinkedInJobInsightsContent();
-
-  // Set up message listener
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    contentScript.handleMessage(message, sender, sendResponse);
+  // Listen for data from the injected script
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'LINKEDIN_JOB_INSIGHTS_DATA') {
+      const { jobId, data } = event.data;
+      showDataNotification({ jobId, applies: data.applies, extractedFrom: 'page-intercept' });
+    }
   });
 
-  // Cleanup on page unload
-  window.addEventListener('beforeunload', () => {
-    contentScript.cleanup();
-  });
+  function showDataNotification(jobData) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #0073b1;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      max-width: 300px;
+    `;
+    notification.innerHTML = `
+      <div style="font-weight: bold; margin-bottom: 8px;">LinkedIn Job Insights</div>
+      <div>Job ID: ${jobData.jobId}</div>
+      <div>📊 Applicants: ${jobData.applies ?? 'N/A'}</div>
+      <div style="margin-top: 8px; font-size: 12px; opacity: 0.8;">Source: ${jobData.extractedFrom}</div>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => { if (notification.parentNode) notification.parentNode.removeChild(notification); }, 5000);
+  }
 
-  // Add some CSS for better integration
-  const style = document.createElement('style');
-  style.textContent = `
-    .linkedin-job-insights-container {
-      display: inline-flex;
-      gap: 8px;
-      margin-left: 8px;
-    }
-    
-    .linkedin-job-insights-applicants,
-    .linkedin-job-insights-views {
-      display: inline-block;
-    }
-    
-    .linkedin-job-insights-container .job-card-container__metadata-item {
-      color: rgba(0,0,0,.6);
-      font-size: 12px;
-      line-height: 1.33333;
-    }
-    
-    .linkedin-job-insights-container .tvm__text {
-      color: inherit;
-    }
-    
-    /* Dark theme support */
-    @media (prefers-color-scheme: dark) {
-      .linkedin-job-insights-container .job-card-container__metadata-item {
-        color: rgba(255,255,255,.6);
-      }
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .linkedin-job-insights-container {
-        flex-direction: column;
-        gap: 4px;
-      }
-    }
-  `;
-  
-  document.head.appendChild(style);
-
-  utils.log('LinkedIn Job Insights content script loaded');
+  // Inject the interceptor as soon as possible
+  injectVoyagerInterceptor();
 
 })();

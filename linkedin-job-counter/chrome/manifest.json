@@ -6,16 +6,18 @@
   "permissions": [
     "webRequest",
     "activeTab",
-    "storage"
+    "storage",
+    "alarms"
   ],
   "host_permissions": [
     "*://*.linkedin.com/*"
   ],
   "content_scripts": [{
-    "matches": ["*://*.linkedin.com/jobs/*"],
-    "js": ["shared/utils.js", "shared/ui-injector.js", "content.js"],
+    "matches": ["*://*.linkedin.com/*"],
+    "js": ["utils.js", "ui-injector.js", "content-simple.js"],
     "css": ["styles.css"],
-    "run_at": "document_idle"
+    "run_at": "document_idle",
+    "all_frames": false
   }],
   "background": {
     "service_worker": "background.js"
@@ -24,9 +26,8 @@
     "resources": ["styles.css"],
     "matches": ["*://*.linkedin.com/*"]
   }],
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Show LinkedIn Job Insights"
   }
 }

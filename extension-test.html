@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Job Insights Extension Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success { border-color: #28a745; background-color: #f8f9fa; }
+        .error { border-color: #dc3545; background-color: #f8f9fa; }
+        .info { border-color: #17a2b8; background-color: #f8f9fa; }
+        .log {
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        button {
+            background: #0073b1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005885;
+        }
+    </style>
+</head>
+<body>
+    <h1>LinkedIn Job Insights Extension Test</h1>
+    
+    <div class="test-section info">
+        <h2>Extension Status Check</h2>
+        <p>This page will help you test if the LinkedIn Job Insights extension is working properly.</p>
+        <div id="extension-status">Checking extension status...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <button onclick="checkExtension()">Check Extension</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+        <button onclick="testJobData()">Test Job Data Extraction</button>
+        <button onclick="simulateLinkedIn()">Simulate LinkedIn Environment</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Logs</h2>
+        <div id="console-log" class="log">Waiting for logs...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Mock Job Data</h2>
+        <div class="mock-job-container">
+            <div class="jobs-unified-top-card__subtitle-secondary-grouping" data-job-id="12345">
+                <span aria-label="143 applicants">143 applicants</span>
+            </div>
+            <div class="job-details-how-you-match__applicants" data-job-id="67890">
+                Be among the first 25 applicants
+            </div>
+            <div class="jobs-box__list-item" data-job-id="54321">
+                <span>Over 200 applicants</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Capture console messages
+        const originalLog = console.log;
+        const originalError = console.error;
+        const logContainer = document.getElementById('console-log');
+        const logs = [];
+
+        function addLog(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] [${type.toUpperCase()}] ${message}`;
+            logs.push(logEntry);
+            logContainer.textContent = logs.slice(-20).join('\\n'); // Show last 20 logs
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            addLog('log', args.join(' '));
+            originalLog.apply(console, args);
+        };
+
+        console.error = function(...args) {
+            addLog('error', args.join(' '));
+            originalError.apply(console, args);
+        };
+
+        function checkExtension() {
+            addLog('info', 'Checking extension status...');
+            
+            // Check if chrome extension APIs are available
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                addLog('success', 'Chrome extension API detected');
+                
+                // Check if our extension is injected
+                if (window.linkedInJobInsightsInjected) {
+                    addLog('success', 'LinkedIn Job Insights extension flag detected');
+                    document.getElementById('extension-status').innerHTML = 
+                        '<span style="color: green;">✅ Extension appears to be loaded</span>';
+                } else {
+                    addLog('warning', 'Extension flag not found');
+                    document.getElementById('extension-status').innerHTML = 
+                        '<span style="color: orange;">⚠️ Extension may not be fully loaded</span>';
+                }
+
+                // Try to send a message to background script
+                try {
+                    chrome.runtime.sendMessage({type: 'TEST_CONNECTION'}, (response) => {
+                        if (chrome.runtime.lastError) {
+                            addLog('error', 'Background script connection failed: ' + chrome.runtime.lastError.message);
+                        } else {
+                            addLog('success', 'Background script connected: ' + JSON.stringify(response));
+                        }
+                    });
+                } catch (error) {
+                    addLog('error', 'Error connecting to background script: ' + error.message);
+                }
+            } else {
+                addLog('error', 'Chrome extension API not available');
+                document.getElementById('extension-status').innerHTML = 
+                    '<span style="color: red;">❌ Not running in extension context</span>';
+            }
+        }
+
+        function clearLogs() {
+            logs.length = 0;
+            logContainer.textContent = 'Logs cleared.';
+        }
+
+        function testJobData() {
+            addLog('info', 'Testing job data extraction...');
+            
+            // Simulate finding job elements
+            const jobElements = document.querySelectorAll('[data-job-id]');
+            addLog('info', `Found ${jobElements.length} elements with job IDs`);
+            
+            jobElements.forEach((element, index) => {
+                const jobId = element.getAttribute('data-job-id');
+                const text = element.textContent.trim();
+                addLog('info', `Job ${index + 1}: ID=${jobId}, Text="${text}"`);
+                
+                // Extract numbers from text
+                const numbers = text.match(/\\d+/g);
+                if (numbers) {
+                    addLog('success', `  Extracted numbers: ${numbers.join(', ')}`);
+                } else {
+                    addLog('info', '  No numbers found');
+                }
+            });
+        }
+
+        function simulateLinkedIn() {
+            addLog('info', 'Simulating LinkedIn environment...');
+            
+            // Change the page URL to mimic LinkedIn (won't actually change it)
+            addLog('info', 'Current URL: ' + window.location.href);
+            
+            // Set the LinkedIn flag manually
+            window.linkedInJobInsightsInjected = true;
+            addLog('info', 'Set linkedInJobInsightsInjected flag to true');
+            
+            // Trigger a fake API call detection
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                try {
+                    chrome.runtime.sendMessage({
+                        type: 'API_CALL_DETECTED',
+                        url: 'https://www.linkedin.com/voyager/api/jobs/jobPostings/12345',
+                        jobId: '12345'
+                    }, (response) => {
+                        addLog('info', 'Sent API call detection message: ' + JSON.stringify(response));
+                    });
+                } catch (error) {
+                    addLog('error', 'Error sending message: ' + error.message);
+                }
+            }
+        }
+
+        // Auto-check extension on page load
+        window.addEventListener('load', () => {
+            setTimeout(checkExtension, 1000);
+        });
+
+        // Listen for messages from extension
+        if (typeof chrome !== 'undefined' && chrome.runtime) {
+            chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+                addLog('info', 'Received message from extension: ' + JSON.stringify(message));
+                sendResponse({received: true});
+            });
+        }
+    </script>
+</body>
+</html>

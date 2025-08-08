@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LinkedIn Job Insights</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 16px; background: #f3f6f8; color: #222; }
+    .title { font-weight: bold; color: #0073b1; margin-bottom: 8px; font-size: 18px; }
+    .stat { margin: 8px 0; font-size: 16px; }
+    .label { color: #555; }
+    .error { color: #b11d1d; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="title">📊 LinkedIn Job Insights</div>
+  <div id="stats">
+    <div class="stat"><span class="label">Applicants:</span> <span id="applies">...</span></div>
+    <div class="stat"><span class="label">Views:</span> <span id="views">...</span></div>
+    <div class="stat" style="font-size:12px; color:#888;">Job ID: <span id="jobId">...</span></div>
+  </div>
+  <div class="error" id="error" style="display:none;"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

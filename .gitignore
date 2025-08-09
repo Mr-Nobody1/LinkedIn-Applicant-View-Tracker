@@ -3,3 +3,7 @@ dist/
 .env
 .DS_Store
 *.logplan.md
+
+# Ignore Chrome extension private key files
+*.pem
+*.crx

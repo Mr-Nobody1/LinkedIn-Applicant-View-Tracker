@@ -7,3 +7,4 @@ dist/
 # Ignore Chrome extension private key files
 *.pem
 *.crx
+*.zip

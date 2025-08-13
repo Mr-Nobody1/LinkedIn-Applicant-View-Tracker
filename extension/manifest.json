@@ -3,7 +3,7 @@
   "name": "LinkedIn Job Insights",
   "version": "1.0.0",
   "description": "Show real applicants and views on LinkedIn job postings.",
-  "permissions": ["scripting", "activeTab", "storage"],
+  "permissions": ["scripting", "activeTab"],
   "host_permissions": ["*://*.linkedin.com/*"],
   "background": { "service_worker": "sw.js" },
   "content_scripts": [

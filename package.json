@@ -8,7 +8,7 @@
     "install-playwright": "npm install playwright && npx playwright install chromium"
   },
   "devDependencies": {
-    "playwright": "^1.54.2"
+    "playwright": "^1.57.0"
   },
   "keywords": [
     "linkedin",
@@ -19,6 +19,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@playwright/test": "^1.54.2"
+    "@playwright/test": "^1.57.0"
   }
 }

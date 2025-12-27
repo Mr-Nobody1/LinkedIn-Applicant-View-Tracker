@@ -1,12 +1,133 @@
 /* Toast */
-.li-ji-toast { position: fixed; top: 20px; right: 20px; background: #0a66c2; color: #fff; padding: 14px 16px; border-radius: 10px; box-shadow: 0 12px 24px rgba(2,32,71,.2); z-index: 10000; transform: translateY(-8px); opacity: 0; transition: all .25s ease; max-width: 320px; border: 1px solid #ffffff26; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+.li-ji-toast { 
+  position: fixed; 
+  top: 20px; 
+  right: 20px; 
+  background: linear-gradient(135deg, #0a66c2 0%, #004182 100%); 
+  color: #fff; 
+  padding: 14px 16px; 
+  border-radius: 12px; 
+  box-shadow: 0 12px 24px rgba(2,32,71,.25); 
+  z-index: 10000; 
+  transform: translateY(-8px); 
+  opacity: 0; 
+  transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); 
+  max-width: 320px; 
+  border: 1px solid rgba(255,255,255,.15);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+  backdrop-filter: blur(8px);
+}
 .li-ji-toast.show { transform: translateY(0); opacity: 1; }
-.li-ji-toast__title { font-weight: 700; margin-bottom: 6px; font-size: 14px; letter-spacing: .2px; }
-.li-ji-toast__row { display:flex; align-items:center; justify-content:space-between; gap: 14px; font-size: 13px; opacity: .95; }
-.li-ji-toast__row + .li-ji-toast__row { margin-top: 4px; }
+.li-ji-toast__title { 
+  font-weight: 700; 
+  margin-bottom: 8px; 
+  font-size: 14px; 
+  letter-spacing: .2px; 
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.li-ji-toast__title::before {
+  content: '📊';
+}
+.li-ji-toast__row { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  gap: 14px; 
+  font-size: 13px; 
+  opacity: .95; 
+  background: rgba(255,255,255,.1);
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+.li-ji-toast__row + .li-ji-toast__row { margin-top: 6px; }
 
 /* Inline panel */
-.li-ji-inline { display: inline-flex; align-items: center; gap: 10px; background: #f3f6f8; border: 1px solid #e5e7eb; padding: 8px 10px; border-radius: 8px; margin-top: 8px; }
-.li-ji-chip { display:flex; align-items:center; gap:8px; color:#334155; font-size: 13px; }
-.li-ji-chip strong { color:#0a66c2; font-weight: 700; }
-.li-ji-sep { width:1px; height:14px; background:#e5e7eb; }
+.li-ji-inline { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 12px; 
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2f6 100%); 
+  border: 1px solid #e2e8f0; 
+  padding: 10px 14px; 
+  border-radius: 10px; 
+  margin-top: 10px; 
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  transition: all .3s ease;
+}
+.li-ji-inline:hover {
+  box-shadow: 0 4px 16px rgba(10,102,194,.15);
+  border-color: #0a66c2;
+}
+.li-ji-chip { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  color: #475569; 
+  font-size: 13px; 
+  font-weight: 500;
+}
+.li-ji-chip strong { 
+  color: #0a66c2; 
+  font-weight: 700; 
+  font-size: 15px;
+}
+.li-ji-sep { 
+  width: 1px; 
+  height: 18px; 
+  background: linear-gradient(to bottom, transparent, #cbd5e1, transparent); 
+}
+
+/* Loading spinner */
+.li-ji-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #0a66c2;
+  border-radius: 50%;
+  animation: li-ji-spin 0.8s linear infinite;
+}
+
+@keyframes li-ji-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Dark mode support for inline elements */
+@media (prefers-color-scheme: dark) {
+  .li-ji-inline {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-color: #334155;
+    color: #e2e8f0;
+  }
+  .li-ji-inline:hover {
+    border-color: #60a5fa;
+    box-shadow: 0 4px 16px rgba(96,165,250,.2);
+  }
+  .li-ji-chip {
+    color: #94a3b8;
+  }
+  .li-ji-chip strong {
+    color: #60a5fa;
+  }
+  .li-ji-sep {
+    background: linear-gradient(to bottom, transparent, #475569, transparent);
+  }
+  .li-ji-spinner {
+    border-color: #334155;
+    border-top-color: #60a5fa;
+  }
+  .li-ji-toast {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  }
+}
+
+/* Pulse animation for new data */
+.li-ji-inline.li-ji-updated {
+  animation: li-ji-pulse 0.5s ease;
+}
+
+@keyframes li-ji-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
